@@ -347,6 +347,31 @@ header .divider{
   letter-spacing:0.15em;margin-bottom:4px;
 }
 .share-capture .share-header p{color:var(--text-dim);font-size:0.8rem;letter-spacing:0.2em}
+
+/* Image Modal */
+.image-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn 0.3s ease;
+}
+.image-modal-content{
+  background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  max-width:100%;max-height:90vh;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.image-modal-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  color:var(--gold);font-size:0.9rem;letter-spacing:0.1em;
+}
+.image-modal-close{
+  background:none;border:none;color:var(--text-dim);font-size:1.5rem;
+  cursor:pointer;line-height:1;padding:0 4px;
+}
+.image-modal-close:hover{color:var(--gold)}
+.image-modal-img{
+  max-width:100%;max-height:calc(90vh - 50px);display:block;
+}
 </style>
 </head>
 <body>
@@ -1030,26 +1055,27 @@ async function shareAsImage() {
   btn.classList.add('loading');
   btn.textContent = '生成中...';
 
+  let canvas;
+  let headerDiv;
+
   try {
     const hexEl = $('hexDisplay');
-    const interpEl = $('interpSection');
     const hexName = hexEl.querySelector('.hexagram-title')?.textContent || '卦象';
     const now = new Date();
     const timeStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const fileName = `大衍算卦_${hexName}_${timeStr.replace(/[\s:]/g, '')}.png`;
 
-    // Temporarily add header to results section
-    const headerDiv = document.createElement('div');
+    headerDiv = document.createElement('div');
     headerDiv.className = 'share-header';
     headerDiv.innerHTML = `<h2>大衍算卦</h2><p>${timeStr}</p>`;
     $('resultsSection').prepend(headerDiv);
     $('resultsSection').classList.add('share-capture');
     $('shareBtnWrap').style.display = 'none';
 
-    // Scroll to top of results for full capture
     $('resultsSection').scrollIntoView({behavior: 'instant', block: 'start'});
     await new Promise(r => setTimeout(r, 400));
 
-    const canvas = await html2canvas($('resultsSection'), {
+    canvas = await html2canvas($('resultsSection'), {
       backgroundColor: '#0d0b09',
       scale: 2,
       useCORS: true,
@@ -1057,27 +1083,75 @@ async function shareAsImage() {
       windowWidth: 600
     });
 
-    // Restore
+    // Restore UI immediately after capture
     $('resultsSection').removeChild(headerDiv);
+    headerDiv = null;
     $('resultsSection').classList.remove('share-capture');
     $('shareBtnWrap').style.display = '';
 
-    // Download using blob (works on file:// protocol)
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.download = `大衍算卦_${hexName}_${timeStr.replace(/[\s:]/g, '')}.png`;
-    link.href = blobUrl;
-    link.click();
-    URL.revokeObjectURL(blobUrl);
+    // Try native share API first (mobile friendly)
+    if (navigator.share && canvas.toBlob) {
+      try {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const file = new File([blob], fileName, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: fileName });
+          showToast('分享成功');
+          return;
+        }
+      } catch (shareErr) {
+        // User cancelled or not supported, fall through
+      }
+    }
 
-    showToast('卦象图片已保存');
+    // Try blob download
+    let downloaded = false;
+    if (canvas.toBlob && URL.createObjectURL) {
+      try {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        downloaded = true;
+      } catch (e) {
+        // fall through
+      }
+    }
+
+    // Fallback: dataURL
+    if (!downloaded) {
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        downloaded = true;
+      } catch (e) {
+        // fall through
+      }
+    }
+
+    if (downloaded) {
+      showToast('卦象图片已保存');
+    } else {
+      // Last resort: show image in modal for manual save
+      showImageModal(canvas, fileName);
+      showToast('请长按/右键图片保存');
+    }
   } catch (e) {
     console.error('Share failed:', e);
     showToast('生成失败，请重试');
-    // Restore on error
-    const hdr = $('resultsSection').querySelector('.share-header');
-    if (hdr) hdr.remove();
+    if (headerDiv && headerDiv.parentNode) {
+      $('resultsSection').removeChild(headerDiv);
+    }
     $('resultsSection').classList.remove('share-capture');
     $('shareBtnWrap').style.display = '';
   } finally {
@@ -1088,6 +1162,23 @@ async function shareAsImage() {
       </svg>
       分享卦象`;
   }
+}
+
+function showImageModal(canvas, fileName) {
+  const modal = document.createElement('div');
+  modal.className = 'image-modal';
+  modal.innerHTML = `
+    <div class="image-modal-content">
+      <div class="image-modal-header">
+        <span>长按/右键图片保存</span>
+        <button class="image-modal-close">×</button>
+      </div>
+      <img class="image-modal-img" alt="${fileName}">
+    </div>`;
+  modal.querySelector('.image-modal-img').src = canvas.toDataURL('image/png');
+  modal.querySelector('.image-modal-close').onclick = () => modal.remove();
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
 }
 
 // Speed slider
