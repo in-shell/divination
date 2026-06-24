@@ -1062,11 +1062,14 @@ async function shareAsImage() {
     $('resultsSection').classList.remove('share-capture');
     $('shareBtnWrap').style.display = '';
 
-    // Download
+    // Download using blob (works on file:// protocol)
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.download = `大衍算卦_${hexName}_${timeStr.replace(/[\s:]/g, '')}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.href = blobUrl;
     link.click();
+    URL.revokeObjectURL(blobUrl);
 
     showToast('卦象图片已保存');
   } catch (e) {
