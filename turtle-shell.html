@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>大衍算卦</title>
+<title>龟壳占卜</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
@@ -12,7 +12,8 @@
   --bg:#0d0b09;--bg2:#1a1610;--bg3:#252017;--gold:#c9a96e;--gold2:#e8d5a3;
   --gold-dim:#7a6a42;--red:#b33a3a;--red2:#d45a5a;--text:#e8dcc8;--text-dim:#9a8e7a;
   --border:#3a3228;--shadow:rgba(0,0,0,0.6);
-  --stem-color:#c4a35a;--stem-dark:#8a7340;--stem-light:#e8d5a3;
+  --coin-gold:#d4a84b;--coin-gold2:#f0d078;--coin-dark:#8a6a2a;
+  --shell-dark:#5c3d1e;--shell-mid:#8b5a2b;--shell-light:#b8864a;
 }
 html{font-size:16px;scroll-behavior:smooth}
 body{
@@ -50,7 +51,7 @@ body::after{
 }
 
 /* Header */
-header{text-align:center;padding:60px 0 30px;position:relative}
+header{text-align:center;padding:50px 0 30px;position:relative}
 header h1{
   font-family:'Ma Shan Zheng',cursive;font-size:clamp(2.5rem,8vw,4.5rem);
   color:var(--gold);letter-spacing:0.15em;margin-bottom:8px;
@@ -65,8 +66,26 @@ header .divider{
   background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);
 }
 
+/* Input Section */
+.input-section{
+  text-align:center;padding:20px 0 30px;
+}
+.question-input{
+  width:100%;max-width:500px;padding:14px 20px;
+  border:1px solid var(--border);border-radius:4px;
+  background:rgba(26,22,16,0.6);color:var(--text);
+  font-family:'Noto Serif SC',serif;font-size:0.95rem;
+  letter-spacing:0.05em;outline:none;transition:all 0.3s;
+  text-align:center;
+}
+.question-input:focus{
+  border-color:var(--gold-dim);
+  box-shadow:0 0 20px rgba(201,169,110,0.1);
+}
+.question-input::placeholder{color:var(--text-dim);opacity:0.5}
+
 /* Start Button */
-.start-section{text-align:center;padding:20px 0 40px}
+.start-section{text-align:center;padding:10px 0 30px}
 .btn-start{
   display:inline-flex;align-items:center;gap:12px;
   padding:16px 48px;border:1px solid var(--gold-dim);
@@ -84,113 +103,186 @@ header .divider{
 .btn-start:hover::before{opacity:1}
 .btn-start:active{transform:translateY(0)}
 .btn-start:disabled{opacity:0.4;cursor:not-allowed;transform:none}
-.btn-start svg{width:20px;height:20px}
 
 /* Progress */
 .progress-bar{
-  display:flex;justify-content:center;gap:8px;padding:20px 0;
+  display:flex;justify-content:center;gap:12px;padding:15px 0;
   opacity:0;transition:opacity 0.5s;
 }
 .progress-bar.active{opacity:1}
 .progress-dot{
-  width:10px;height:10px;border-radius:50%;border:1px solid var(--gold-dim);
+  width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--gold-dim);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.75rem;color:var(--text-dim);
   transition:all 0.4s;position:relative;
 }
-.progress-dot.active{background:var(--gold);border-color:var(--gold);box-shadow:0 0 12px rgba(201,169,110,0.4)}
-.progress-dot.done{background:var(--gold-dim);border-color:var(--gold-dim)}
+.progress-dot.active{
+  border-color:var(--gold);color:var(--gold);
+  box-shadow:0 0 15px rgba(201,169,110,0.3);
+  background:rgba(201,169,110,0.05);
+}
+.progress-dot.done{
+  background:var(--gold-dim);border-color:var(--gold-dim);color:var(--bg);
+}
 .progress-label{
-  text-align:center;color:var(--text-dim);font-size:0.85rem;
+  text-align:center;color:var(--text-dim);font-size:0.9rem;
   padding:8px 0;min-height:32px;letter-spacing:0.1em;
 }
 
-/* Animation Area */
-.animation-area{
-  min-height:300px;border:1px solid var(--border);border-radius:4px;
+/* Turtle Shell Area */
+.shell-area{
+  min-height:380px;border:1px solid var(--border);border-radius:4px;
   background:linear-gradient(180deg,rgba(26,22,16,0.8),rgba(13,11,9,0.9));
   margin:20px 0;position:relative;overflow:hidden;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:30px 20px;
 }
-.animation-area::before{
+.shell-area::before{
   content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse at center,rgba(201,169,110,0.03),transparent 70%);
+  background:radial-gradient(ellipse at center,rgba(201,169,110,0.04),transparent 70%);
 }
 
-/* Stems Display */
-.stems-container{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:3px;
-  padding:10px;max-width:100%;min-height:60px;align-items:center;
+/* Turtle Shell */
+.turtle-shell{
+  width:220px;height:180px;position:relative;
+  margin-bottom:20px;transition:transform 0.1s;
 }
-.stem{
-  width:4px;height:36px;border-radius:2px;
-  background:linear-gradient(180deg,var(--stem-light),var(--stem-color),var(--stem-dark));
-  transition:all 0.3s ease;position:relative;
-  box-shadow:0 1px 3px rgba(0,0,0,0.3);
+.turtle-shell.shaking{
+  animation:shellShake 0.15s ease-in-out infinite;
 }
-.stem.highlight{
-  background:linear-gradient(180deg,#f0e0b0,var(--gold),#b8943e);
-  box-shadow:0 0 8px rgba(201,169,110,0.4);
+@keyframes shellShake{
+  0%,100%{transform:translateX(0) rotate(0)}
+  25%{transform:translateX(-8px) rotate(-3deg)}
+  75%{transform:translateX(8px) rotate(3deg)}
 }
-.stem.removing{
-  opacity:0;transform:translateY(-20px) scale(0.5);transition:all 0.4s ease;
-}
-.stem.group-a{background:linear-gradient(180deg,#f0e0b0,var(--gold),#b8943e)}
-.stem.group-b{background:linear-gradient(180deg,#a0c0a0,#6a9a6a,#4a7a4a)}
-.stem.group-hang{background:linear-gradient(180deg,#e0a0a0,var(--red),#8a2a2a)}
-.stem.group-remain{background:linear-gradient(180deg,#a0b0d0,#6080b0,#4060a0)}
 
-/* Step Info */
-.step-info{
+.shell-body{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 40%,var(--shell-light) 0%,var(--shell-mid) 40%,var(--shell-dark) 100%);
+  border-radius:50% 50% 45% 45% / 55% 55% 45% 45%;
+  box-shadow:
+    inset 0 -10px 30px rgba(0,0,0,0.4),
+    inset 0 5px 15px rgba(255,220,150,0.2),
+    0 10px 30px rgba(0,0,0,0.5);
+}
+.shell-body::before{
+  content:'';position:absolute;inset:15px;
+  border-radius:50% 50% 45% 45% / 55% 55% 45% 45%;
+  border:1px solid rgba(0,0,0,0.2);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Shell pattern - hexagons */
+.shell-pattern{
+  position:absolute;inset:25px 30px;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(3,1fr);gap:3px;
+}
+.hex-cell{
+  background:rgba(92,61,30,0.6);
+  clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  border:1px solid rgba(0,0,0,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;color:rgba(255,220,150,0.3);
+  font-weight:600;
+}
+.hex-cell.center{
+  background:rgba(139,90,43,0.8);
+}
+
+/* Coins */
+.coins-container{
+  display:flex;gap:24px;justify-content:center;align-items:center;
+  min-height:100px;margin:10px 0;
+  perspective:800px;
+}
+.coin{
+  width:64px;height:64px;position:relative;
+  transform-style:preserve-3d;
+  transition:transform 0.1s;
+}
+.coin.flipping{
+  animation:coinFlip 0.6s ease-in-out;
+}
+@keyframes coinFlip{
+  0%{transform:rotateY(0) translateY(0)}
+  50%{transform:rotateY(540deg) translateY(-30px)}
+  100%{transform:rotateY(1080deg) translateY(0)}
+}
+
+.coin-face{
+  position:absolute;inset:0;border-radius:50%;
+  backface-visibility:hidden;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;font-weight:700;
+}
+.coin-front{
+  background:
+    radial-gradient(circle at 30% 30%,var(--coin-gold2),var(--coin-gold) 50%,var(--coin-dark) 100%);
+  color:#5a3a10;
+  box-shadow:
+    inset 0 2px 6px rgba(255,255,200,0.4),
+    inset 0 -3px 8px rgba(0,0,0,0.3),
+    0 4px 12px rgba(0,0,0,0.4);
+  border:2px solid var(--coin-dark);
+}
+.coin-front::before{
+  content:'';position:absolute;inset:6px;
+  border-radius:50%;border:1px solid rgba(90,58,16,0.3);
+}
+.coin-back{
+  background:
+    radial-gradient(circle at 30% 30%,var(--coin-gold2),var(--coin-gold) 50%,var(--coin-dark) 100%);
+  color:#5a3a10;
+  transform:rotateY(180deg);
+  box-shadow:
+    inset 0 2px 6px rgba(255,255,200,0.4),
+    inset 0 -3px 8px rgba(0,0,0,0.3),
+    0 4px 12px rgba(0,0,0,0.4);
+  border:2px solid var(--coin-dark);
+}
+.coin-back::before{
+  content:'';position:absolute;inset:6px;
+  border-radius:50%;border:1px solid rgba(90,58,16,0.3);
+}
+.coin-back .coin-symbol{
+  font-size:1rem;font-family:'Ma Shan Zheng',cursive;
+}
+.coin-front .coin-symbol{
+  font-family:'Ma Shan Zheng',cursive;
+}
+
+.coin[data-side="heads"]{transform:rotateY(0)}
+.coin[data-side="tails"]{transform:rotateY(180deg)}
+
+/* Coin result info */
+.coin-result{
   text-align:center;padding:15px 0;min-height:80px;
 }
-.step-title{
+.coin-result .yao-title{
   font-family:'Ma Shan Zheng',cursive;font-size:clamp(1.3rem,4vw,1.8rem);
   color:var(--gold);margin-bottom:6px;
 }
-.step-desc{color:var(--text-dim);font-size:0.9rem;letter-spacing:0.05em}
-.step-detail{
+.coin-result .yao-desc{color:var(--text-dim);font-size:0.9rem;letter-spacing:0.05em}
+.coin-result .yao-detail{
   color:var(--gold2);font-size:0.95rem;margin-top:6px;
   font-weight:600;letter-spacing:0.05em;
 }
 
-/* Group Labels */
-.groups-display{
-  display:flex;gap:20px;flex-wrap:wrap;justify-content:center;
-  padding:10px 0;width:100%;
+/* Coins legend */
+.coins-legend{
+  display:flex;gap:30px;justify-content:center;padding:10px 0;
+  font-size:0.8rem;color:var(--text-dim);
 }
-.group-box{
-  border:1px solid var(--border);border-radius:4px;padding:10px 16px;
-  background:rgba(26,22,16,0.6);min-width:120px;text-align:center;
-  transition:all 0.3s;
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-dot{
+  width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,var(--coin-gold2),var(--coin-gold) 50%,var(--coin-dark) 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.6rem;color:#5a3a10;font-weight:700;
 }
-.group-box .label{font-size:0.8rem;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.1em}
-.group-box .count{font-size:1.4rem;color:var(--gold);font-weight:700}
-.group-box .stems-mini{display:flex;flex-wrap:wrap;gap:1px;justify-content:center;margin-top:6px}
-.group-box .stems-mini .mini-stem{width:2px;height:16px;border-radius:1px;background:var(--stem-color)}
-
-/* Speed Control */
-.speed-control{
-  display:flex;align-items:center;justify-content:center;gap:12px;
-  padding:10px 0;color:var(--text-dim);font-size:0.85rem;
-}
-.speed-control input[type=range]{
-  width:120px;accent-color:var(--gold);cursor:pointer;
-}
-
-/* Step Control */
-.step-control{
-  display:flex;align-items:center;justify-content:center;gap:16px;
-  padding:15px 0;
-}
-.btn-step,.btn-step-auto{
-  padding:10px 24px;border:1px solid var(--gold-dim);
-  background:linear-gradient(135deg,rgba(201,169,110,0.08),rgba(201,169,110,0.02));
-  color:var(--gold);font-family:'Noto Serif SC',serif;font-size:0.9rem;
-  letter-spacing:0.1em;cursor:pointer;border-radius:2px;
-  transition:all 0.3s ease;
-}
-.btn-step:hover,.btn-step-auto:hover{border-color:var(--gold);background:rgba(201,169,110,0.12)}
-.btn-step:disabled{opacity:0.4;cursor:not-allowed}
 
 /* Results Section */
 .results-section{
@@ -199,10 +291,7 @@ header .divider{
 }
 .results-section.visible{opacity:1;transform:translateY(0)}
 
-/* Hexagram Display */
-.hexagram-display{
-  text-align:center;padding:30px 0;
-}
+.hexagram-display{text-align:center;padding:30px 0}
 .hexagram-title{
   font-family:'Ma Shan Zheng',cursive;font-size:clamp(1.8rem,5vw,2.5rem);
   color:var(--gold);margin-bottom:4px;
@@ -302,15 +391,17 @@ header .divider{
 
 /* Responsive */
 @media(max-width:600px){
-  header{padding:40px 0 20px}
-  .animation-area{padding:20px 12px;min-height:250px}
-  .stem{height:28px;width:3px}
-  .groups-display{gap:10px}
-  .group-box{min-width:90px;padding:8px 10px}
+  header{padding:30px 0 20px}
+  .shell-area{padding:20px 12px;min-height:320px}
+  .turtle-shell{width:160px;height:130px}
+  .coin{width:48px;height:48px}
+  .coin-face{font-size:1rem}
+  .coins-container{gap:16px}
   .yao-line .yao-symbol .bar.yang{width:44px}
   .yao-line .yao-symbol .bar.yin{width:18px}
   .interpretation{padding:16px}
   .btn-start{padding:14px 32px;font-size:1rem}
+  .coins-legend{gap:16px;font-size:0.75rem}
 }
 
 /* Animations */
@@ -349,7 +440,6 @@ header .divider{
 .share-btn svg{width:16px;height:16px;opacity:0.8}
 .share-btn.loading{opacity:0.5;pointer-events:none}
 
-/* Share capture wrapper - applied as modifier class */
 .share-capture{
   background:linear-gradient(180deg,#0d0b09 0%,#1a1610 100%) !important;
   padding-top:30px !important;
@@ -396,46 +486,80 @@ header .divider{
 
 <div class="container">
   <nav class="nav">
-    <a href="index.html" class="active">大衍算卦</a>
-    <a href="turtle-shell.html">龟壳占卜</a>
+    <a href="index.html">大衍算卦</a>
+    <a href="turtle-shell.html" class="active">龟壳占卜</a>
   </nav>
 
   <header>
-    <h1>大衍算卦</h1>
-    <p class="subtitle">大衍之数五十 其用四十有九</p>
+    <h1>龟壳占卜</h1>
+    <p class="subtitle">古龟卜法 以钱代蓍</p>
     <div class="divider"></div>
   </header>
+
+  <div class="input-section">
+    <input type="text" class="question-input" id="questionInput" 
+      placeholder="请输入您想占卜的问题..." maxlength="50">
+  </div>
 
   <div class="start-section">
     <button class="btn-start" id="btnStart" onclick="startDivination()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/>
       </svg>
-      开始算卦
+      起卦
     </button>
   </div>
 
   <div class="progress-bar" id="progressBar"></div>
   <div class="progress-label" id="progressLabel"></div>
 
-  <div class="speed-control" id="speedControl" style="display:none">
-    <span>慢</span>
-    <input type="range" id="speedSlider" min="1" max="5" value="3">
-    <span>快</span>
-  </div>
-
-  <div class="step-control" id="stepControl" style="display:none">
-    <button class="btn-step" id="btnStep" onclick="stepNext()">下一步</button>
-    <button class="btn-step-auto" id="btnStepAuto" onclick="toggleStepMode()">切换自动/步进</button>
-  </div>
-
-  <div class="animation-area" id="animArea">
-    <div class="step-info" id="stepInfo">
-      <div class="step-title">点击上方按钮开始</div>
-      <div class="step-desc">以蓍草五十根，取其一不用，余四十九策</div>
+  <div class="shell-area" id="shellArea">
+    <div class="coin-result" id="coinResult">
+      <div class="yao-title">诚心起卦</div>
+      <div class="yao-desc">三枚铜钱入龟壳，摇动六次成一卦</div>
     </div>
-    <div class="stems-container" id="stemsContainer"></div>
-    <div class="groups-display" id="groupsDisplay"></div>
+
+    <div class="turtle-shell" id="turtleShell">
+      <div class="shell-body">
+        <div class="shell-pattern">
+          <div class="hex-cell"></div>
+          <div class="hex-cell center">☰</div>
+          <div class="hex-cell"></div>
+          <div class="hex-cell">☲</div>
+          <div class="hex-cell center">☯</div>
+          <div class="hex-cell">☵</div>
+          <div class="hex-cell"></div>
+          <div class="hex-cell center">☷</div>
+          <div class="hex-cell"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="coins-container" id="coinsContainer">
+      <div class="coin" id="coin1" data-side="heads">
+        <div class="coin-face coin-front"><span class="coin-symbol">乾</span></div>
+        <div class="coin-face coin-back"><span class="coin-symbol">坤</span></div>
+      </div>
+      <div class="coin" id="coin2" data-side="heads">
+        <div class="coin-face coin-front"><span class="coin-symbol">元</span></div>
+        <div class="coin-face coin-back"><span class="coin-symbol">亨</span></div>
+      </div>
+      <div class="coin" id="coin3" data-side="heads">
+        <div class="coin-face coin-front"><span class="coin-symbol">利</span></div>
+        <div class="coin-face coin-back"><span class="coin-symbol">贞</span></div>
+      </div>
+    </div>
+
+    <div class="coins-legend">
+      <div class="legend-item">
+        <div class="legend-dot">字</div>
+        <span>正面 (阳 3数)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot">背</div>
+        <span>反面 (阴 2数)</span>
+      </div>
+    </div>
   </div>
 
   <div class="results-section" id="resultsSection">
@@ -452,8 +576,6 @@ header .divider{
 
 <script>
 // ============ 64 Hexagram Database ============
-// 八卦编码(下→上): 乾=111 坤=000 震=100 艮=001 坎=010 离=101 巽=011 兑=110
-// 六位键 = 下卦(初二三爻) + 上卦(四五上爻)
 const HEXAGRAMS = {
   '111111': {name:'乾',full:'乾为天',desc:'元亨利贞。刚健中正，自强不息。象征天，代表刚健、创造、领导之力。',detail:'乾卦六爻皆阳，为纯阳之卦，象征天道运行刚健不息。此卦大吉，利于坚守正道，积极进取。事业上有开创之象，宜把握时机，勇往直前。'},
   '000000': {name:'坤',full:'坤为地',desc:'元亨，利牝马之贞。厚德载物，柔顺承天。象征地，代表包容、承载、滋养。',detail:'坤卦六爻皆阴，为纯阴之卦，象征大地厚德载物。此卦利于柔顺守正，以退为进，宜辅佐他人成就事业。'},
@@ -521,8 +643,75 @@ const HEXAGRAMS = {
   '010101': {name:'未济',full:'火水未济',desc:'亨。事未完成，仍需努力。',detail:'未济卦象征尚未完成。事物仍在发展中，需继续努力。终点也是新的起点。'}
 };
 
+// ============ Yao Texts ============
+const YAO_TEXTS = {
+  '乾': ['潜龙勿用','见龙在田，利见大人','君子终日乾乾，夕惕若厉，无咎','或跃在渊，无咎','飞龙在天，利见大人','亢龙有悔'],
+  '坤': ['履霜，坚冰至','直方大，不习无不利','含章可贞，或从王事，无成有终','括囊，无咎无誉','黄裳，元吉','龙战于野，其血玄黄'],
+  '屯': ['磐桓，利居贞','屯如邅如，乘马班如','即鹿无虞，惟入于林中','乘马班如，求婚媾','屯其膏，小贞吉，大贞凶','乘马班如，泣血涟如'],
+  '蒙': ['发蒙，利用刑人','包蒙吉，纳妇吉','勿用取女，见金夫','困蒙，吝','童蒙，吉','击蒙，不利为寇，利御寇'],
+  '需': ['需于郊，利用恒','需于沙，小有言','需于泥，致寇至','需于血，出自穴','需于酒食，贞吉','入于穴，有不速之客三人来'],
+  '讼': ['不永所事，小有言','不克讼，归而逋','食旧德，贞厉','不克讼，复即命','讼，元吉','或锡之鞶带，终朝三褫之'],
+  '师': ['师出以律，否臧凶','在师中，吉','师或舆尸，凶','师左次，无咎','田有禽，利执言','大君有命，开国承家'],
+  '比': ['有孚比之，无咎','比之自内，贞吉','比之匪人','外比之，贞吉','显比，王用三驱','比之无首，凶'],
+  '小畜': ['复自道，何其咎','牵复，吉','舆说辐，夫妻反目','有孚，血去惕出','有孚挛如，富以其邻','既雨既处，尚德载'],
+  '履': ['素履往，无咎','履道坦坦，幽人贞吉','眇能视，跛能履','履虎尾，愬愬终吉','夬履，贞厉','视履考祥，其旋元吉'],
+  '泰': ['拔茅茹，以其汇','包荒，用冯河','无平不陂，无往不复','翩翩不富以其邻','帝乙归妹，以祉元吉','城复于隍，勿用师'],
+  '否': ['拔茅茹，以其汇','包承，小人吉','包羞','有命无咎','休否，大人吉','倾否，先否后喜'],
+  '同人': ['同人于门，无咎','同人于宗，吝','伏戎于莽','乘其墉，弗克攻','同人先号咷而后笑','同人于郊，无悔'],
+  '大有': ['无交害，匪咎','大车以载，有攸往','公用亨于天子','匪其彭，无咎','厥孚交如，威如','自天佑之，吉无不利'],
+  '谦': ['谦谦君子，用涉大川','鸣谦，贞吉','劳谦，君子有终','无不利，撝谦','不富以其邻','鸣谦，利用行师'],
+  '豫': ['鸣豫，凶','介于石，不终日','盱豫，悔','由豫，大有得','贞疾，恒不死','冥豫，成有渝'],
+  '随': ['官有渝，贞吉','系小子，失丈夫','系丈夫，失小子','随有获，贞凶','孚于嘉，吉','拘系之，乃从维之'],
+  '蛊': ['干父之蛊，有子考','干母之蛊，不可贞','干父之蛊，小有悔','裕父之蛊，往见吝','干父之蛊，用誉','不事王侯，高尚其事'],
+  '临': ['咸临，贞吉','咸临，吉无不利','甘临，无攸利','至临，无咎','知临，大君之宜','敦临，吉无咎'],
+  '观': ['童观，小人无咎','窥观，利女贞','观我生进退','观国之光，利用宾于王','观我生，君子无咎','观其生，君子无咎'],
+  '噬嗑': ['屦校灭趾，无咎','噬肤灭鼻，无咎','噬腊肉，遇毒','噬干胏，得金矢','噬干肉，得黄金','何校灭耳，凶'],
+  '贲': ['贲其趾，舍车而徒','贲其须','贲如濡如','贲如皤如','贲于丘园，束帛戋戋','白贲，无咎'],
+  '剥': ['剥床以足，蔑贞凶','剥床以辨，蔑贞凶','剥之，无咎','剥床以肤，凶','贯鱼以宫人宠','硕果不食，君子得舆'],
+  '复': ['不远复，无祗悔','休复，吉','频复，厉无咎','中行独复','敦复，无悔','迷复，凶'],
+  '无妄': ['无妄往，吉','不耕获，不菑畬','无妄之灾','可贞，无咎','无妄之疾，勿药有喜','无妄行有眚'],
+  '大畜': ['有厉利己','舆说輹','良马逐','童牛之牿','豶豕之牙','何天之衢，亨'],
+  '颐': ['舍尔灵龟，观我朵颐','颠颐，拂经','拂颐，贞凶','颠颐，吉','拂经，居贞吉','由颐，厉吉'],
+  '大过': ['藉用白茅，无咎','枯杨生稊，老夫得其女妻','栋桡，凶','栋隆，吉','枯杨生华，老妇得其士夫','过涉灭顶，凶'],
+  '坎': ['习坎，入于坎窞，凶','坎有险，求小得','来之坎坎，险且枕','樽酒簋贰','坎不盈，祗既平','系用徽纆，凶'],
+  '离': ['履错然，敬之无咎','黄离，元吉','日昃之离，不鼓缶而歌','突如其来如，焚如','出涕沱若，戚嗟若','王用出征，有嘉折首'],
+  '咸': ['咸其拇','咸其腓','咸其股','贞吉悔亡','咸其脢','咸其辅颊舌'],
+  '恒': ['浚恒，贞凶','悔亡','不恒其德','田无禽','恒其德贞','振恒，凶'],
+  '遁': ['遁尾，厉','执之用黄牛之革','系遁，有疾厉','好遁，君子吉','嘉遁，贞吉','肥遁，无不利'],
+  '大壮': ['壮于趾，征凶','贞吉','小人用壮，君子用罔','藩决不羸','丧羊于易','羝羊触藩，不能退'],
+  '晋': ['晋如摧如，贞吉','晋如愁如','众允，悔亡','晋如鼫鼠，贞厉','悔亡，失得勿恤','晋其角，维用伐邑'],
+  '明夷': ['明夷于飞，垂其翼','明夷，夷于左股','明夷于南狩','入于左腹，获明夷之心','箕子之明夷','不明晦，初登于天'],
+  '家人': ['闲有家，悔亡','无攸遂，在中馈','家人嗃嗃，悔厉吉','富家，大吉','王假有家，勿恤','有孚威如，终吉'],
+  '睽': ['悔亡','遇主于巷，无咎','见舆曳','睽孤遇元夫','悔亡，厥宗噬肤','见豕负涂，载鬼一车'],
+  '蹇': ['往蹇来誉','王臣蹇蹇','往蹇来反','往蹇来连','大蹇朋来','往蹇来硕，吉'],
+  '解': ['无咎','田获三狐，得黄矢','负且乘，致寇至','解而拇，朋至斯孚','君子维有解','公用射隼于高墉之上'],
+  '损': ['酌损之','利贞','三人行则损一人','损其疾，使遄有喜','或益之十朋之龟','弗损益之，无咎'],
+  '益': ['利用为大作','或益之十朋之龟','益之用凶事','中行告公从','有孚惠心，勿问元吉','莫益之，或击之'],
+  '夬': ['壮于前趾','惕号，莫夜有戎','壮于頄，有凶','臀无肤，其行次且','苋陆夬夬','无号，终有凶'],
+  '姤': ['系于金柅','包有鱼，无咎','臀无肤，其行次且','包无鱼，起凶','以杞包瓜，含章','姤其角，吝'],
+  '萃': ['有孚不终','引吉，无咎','萃如嗟如','大吉，无咎','萃有位，无咎','赍咨涕洟，无咎'],
+  '升': ['允升，大吉','孚乃利用禴','升虚邑','王用亨于岐山','贞吉，升阶','冥升，利于不息之贞'],
+  '困': ['臀困于株木','困于酒食','困于石','来徐徐','劓刖，困于赤绂','困于葛藟，曰动悔有悔'],
+  '井': ['井泥不食','井谷射鲋','井渫不食','井甃，无咎','井冽寒泉食','井收勿幕，有孚元吉'],
+  '革': ['巩用黄牛之革','己日乃革之','征凶，贞厉','悔亡，有孚改命','大人虎变','君子豹变'],
+  '鼎': ['鼎颠趾，利出否','鼎有实，我仇有疾','鼎耳革，其行塞','鼎折足，覆公餗','鼎黄耳金铉','鼎玉铉，大吉'],
+  '震': ['震来虩虩，后笑言哑哑','震来厉，亿丧贝','震苏苏','震遂泥','震往来厉','震索索，视矍矍'],
+  '艮': ['艮其趾，无咎','艮其腓，不拯其随','艮其限，列其夤','艮其身，无咎','艮其辅，言有序','敦艮，吉'],
+  '渐': ['鸿渐于干','鸿渐于磐','鸿渐于陆','鸿渐于木','鸿渐于陵','鸿渐于陆，其羽可用为仪'],
+  '归妹': ['归妹以娣','眇能视，利幽人之贞','归妹以须','归妹愆期','帝乙归妹','女承筐无实'],
+  '丰': ['遇其配主，虽旬无咎','丰其蔀，日中见斗','丰其沛，日中见沫','丰其蔀，日中见斗','来章，有庆誉','丰其屋，蔀其家'],
+  '旅': ['旅琐琐，斯其所取灾','旅即次，怀其资','旅焚其次','旅于处，得其资斧','射雉，一矢亡','鸟焚其巢，旅人先笑后号咷'],
+  '巽': ['进退，利武人之贞','巽在床下，用史巫纷若','频巽，吝','悔亡，田获三品','贞吉悔亡','巽在床下，丧其资斧'],
+  '兑': ['和兑，吉','孚兑，吉','来兑，凶','商兑未宁','孚于剥，有厉','引兑'],
+  '涣': ['用拯马壮，吉','涣奔其机','涣其躬','涣其群','涣汗其大号','涣其血，去逖出'],
+  '节': ['不出户庭，无咎','不出门庭，凶','不节若，则嗟若','安节，亨','甘节，吉','苦节，贞凶'],
+  '中孚': ['虞吉','鸣鹤在阴','得敌，或鼓或罢','月几望','有孚挛如','翰音登于天，贞凶'],
+  '小过': ['飞鸟以凶','过其祖，遇其妣','弗过防之','无咎，弗过遇之','密云不雨','弗遇过之，飞鸟离之'],
+  '既济': ['曳其轮，濡其尾','妇丧其茀，勿逐','高宗伐鬼方','繻有衣袽','东邻杀牛，不如西邻之禴','濡其首，厉'],
+  '未济': ['濡其尾，吝','曳其轮，贞吉','未济征凶','贞吉悔亡','贞吉无悔','饮酒濡首，有孚失是']
+};
+
 // ============ Core Algorithm ============
-// 真随机：crypto + 时间戳混合，确保与当前时刻关联
 function secureRandomInt(min, max) {
   const range = max - min + 1;
   const buf = new Uint32Array(2);
@@ -532,63 +721,41 @@ function secureRandomInt(min, max) {
   return min + (v % range);
 }
 
-// 计算一爻：49策分二→挂一→揲四→归奇，重复3次
-// 返回 { steps, result }
-// steps[i] = { total, left, right, hang, l_rem, r_rem, removed, remaining }
-// left >= 1, right >= 2（挂一前 right >= 3，挂一后 right >= 2）
-function computeLine() {
-  let total = 49;
-  const steps = [];
+// 三枚铜钱起一爻
+// 正面(字)=3数(阳)，反面(背)=2数(阴)
+// 三枚总和：6=老阴，7=少阳，8=少阴，9=老阳
+function tossCoins() {
+  const coins = [];
+  let total = 0;
   for (let i = 0; i < 3; i++) {
-    const currentTotal = total; // 本变开始时的总策数（归奇前）
-    // 分二：left ∈ [1, total-3]，保证 right = total - left >= 3（挂一后 >= 2）
-    const left = secureRandomInt(1, total - 3);
-    const right = total - left; // 右策（挂一前）
-
-    // 挂一：从右策取1根
-    const hang = 1;
-    const rightAfterHang = right - hang; // 挂一后的右策
-
-    // 揲四：两边分别对4求余，余数为0时取4
-    const l_rem = left % 4 || 4;
-    const r_rem = rightAfterHang % 4 || 4;
-
-    // 归奇：剔除挂一 + 左余 + 右余
-    const removed = hang + l_rem + r_rem;
-    total -= removed;
-    steps.push({
-      total: currentTotal, // 本变开始时的总策数（用于动画渲染草梗）
-      left,           // 左策
-      right,          // 右策（挂一前）
-      hang,           // 挂一
-      rightAfterHang, // 右策（挂一后）
-      l_rem,          // 左余
-      r_rem,          // 右余
-      removed,        // 本变归奇总数
-      remaining: total // 剩余策数
-    });
+    const isHeads = secureRandomInt(0, 1) === 1;
+    const value = isHeads ? 3 : 2;
+    coins.push({ isHeads, value });
+    total += value;
   }
-  const result = total / 4; // 6, 7, 8, 或 9
-  return { steps, result };
+  
+  let yaoType, yaoValue, isChanging;
+  switch(total) {
+    case 6:
+      yaoType = '老阴'; yaoValue = 6; isChanging = true; break;
+    case 7:
+      yaoType = '少阳'; yaoValue = 7; isChanging = false; break;
+    case 8:
+      yaoType = '少阴'; yaoValue = 8; isChanging = false; break;
+    case 9:
+      yaoType = '老阳'; yaoValue = 9; isChanging = true; break;
+  }
+  
+  return { coins, total, yaoType, yaoValue, isChanging };
 }
 
 // ============ State ============
 let isRunning = false;
-let animSpeed = 3;
-let history = JSON.parse(localStorage.getItem('divination_history') || '[]');
-
-// 步进模式
-let stepMode = false;
-let stepResolve = null;
+let history = JSON.parse(localStorage.getItem('turtle_history') || '[]');
 
 // ============ UI Helpers ============
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-function getDelay() {
-  const base = [600, 400, 250, 120, 50];
-  return base[animSpeed - 1] || 300;
-}
 
 function showToast(msg) {
   const t = $('toast');
@@ -597,177 +764,36 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function setStepInfo(title, desc, detail) {
-  $('stepInfo').innerHTML = `
-    <div class="step-title">${title}</div>
-    <div class="step-desc">${desc}</div>
-    ${detail ? `<div class="step-detail">${detail}</div>` : ''}
+function setCoinResult(title, desc, detail) {
+  $('coinResult').innerHTML = `
+    <div class="yao-title">${title}</div>
+    <div class="yao-desc">${desc}</div>
+    ${detail ? `<div class="yao-detail">${detail}</div>` : ''}
   `;
 }
 
-function clearAnimArea() {
-  $('stemsContainer').innerHTML = '';
-  $('groupsDisplay').innerHTML = '';
+function setCoinSide(coinEl, isHeads) {
+  coinEl.dataset.side = isHeads ? 'heads' : 'tails';
 }
 
-function renderStems(count, container, cls = '') {
-  container.innerHTML = '';
-  for (let i = 0; i < count; i++) {
-    const s = document.createElement('div');
-    s.className = 'stem' + (cls ? ' ' + cls : '');
-    s.style.animationDelay = (i * 8) + 'ms';
-    container.appendChild(s);
-  }
+function flipCoin(coinEl, isHeads) {
+  return new Promise(resolve => {
+    coinEl.classList.add('flipping');
+    setTimeout(() => {
+      setCoinSide(coinEl, isHeads);
+    }, 300);
+    setTimeout(() => {
+      coinEl.classList.remove('flipping');
+      resolve();
+    }, 600);
+  });
 }
 
-function renderMiniStems(count) {
-  let html = '<div class="stems-mini">';
-  for (let i = 0; i < Math.min(count, 40); i++) {
-    html += '<div class="mini-stem"></div>';
-  }
-  if (count > 40) html += `<span style="font-size:0.7rem;color:var(--text-dim)">×${count}</span>`;
-  html += '</div>';
-  return html;
-}
-
-function showGroups(groups) {
-  let html = '<div class="groups-display">';
-  const labels = {left: '左策', right: '右策', hang: '挂一', remain: '余策', l_remain: '左余', r_remain: '右余', removed: '归奇'};
-  for (const [key, val] of Object.entries(groups)) {
-    html += `<div class="group-box">
-      <div class="label">${labels[key] || key}</div>
-      <div class="count">${val}</div>
-      ${renderMiniStems(val)}
-    </div>`;
-  }
-  html += '</div>';
-  $('groupsDisplay').innerHTML = html;
-}
-
-// ============ Step Mode ============
-function toggleStepMode() {
-  stepMode = !stepMode;
-  $('btnStepAuto').textContent = stepMode ? '切换为自动' : '切换为步进';
-  showToast(stepMode ? '已切换为步进模式' : '已切换为自动模式');
-}
-
-function stepNext() {
-  if (stepResolve) { stepResolve(); stepResolve = null; }
-}
-
-function waitForStep() {
-  if (!stepMode) return Promise.resolve();
-  return new Promise(resolve => { stepResolve = resolve; });
-}
-
-// ============ Animation Engine ============
-// 纯回放：接收 computeLine() 预计算数据，动画仅展示
-async function animateChange(yaoIndex, lineData) {
-  const delay = getDelay();
-  const { steps, result } = lineData;
-
-  // 显示初始49根
-  setStepInfo(`第${yaoIndex}爻`, '取蓍草四十九根', `共 49 策`);
-  renderStems(49, $('stemsContainer'));
-  $('groupsDisplay').innerHTML = '';
-  await waitForStep();
-  await sleep(delay * 0.5);
-
-  for (let i = 0; i < 3; i++) {
-    const s = steps[i];
-    const currentTotal = s.total;
-
-    // ── 分二 ──
-    setStepInfo(
-      `第${yaoIndex}爻 · 第${i + 1}揲`,
-      '分而为二以象两',
-      `左 ${s.left} 策 · 右 ${s.right} 策`
-    );
-    const container = $('stemsContainer');
-    const stems = container.querySelectorAll('.stem');
-    const leftIndices = new Set();
-    while (leftIndices.size < s.left) leftIndices.add(Math.floor(Math.random() * currentTotal));
-    stems.forEach((el, idx) => {
-      setTimeout(() => el.classList.add(leftIndices.has(idx) ? 'group-a' : 'group-b'), idx * 3);
-    });
-    await waitForStep();
-    await sleep(delay * 0.5);
-
-    // ── 挂一 ──
-    setStepInfo(
-      `第${yaoIndex}爻 · 第${i + 1}揲`,
-      '挂一以象三',
-      `左 ${s.left} 策 · 右 ${s.rightAfterHang} 策 · 挂 ${s.hang} 策`
-    );
-    const allStems = $('stemsContainer').querySelectorAll('.stem');
-    const rightStems = [];
-    allStems.forEach((el, idx) => { if (!leftIndices.has(idx)) rightStems.push(el); });
-    if (rightStems.length > 0) {
-      const hi = Math.floor(Math.random() * rightStems.length);
-      rightStems[hi].classList.remove('group-b');
-      rightStems[hi].classList.add('group-hang');
-    }
-    showGroups({left: s.left, right: s.rightAfterHang, hang: s.hang});
-    await waitForStep();
-    await sleep(delay * 0.3);
-
-    // ── 揲四 ──
-    setStepInfo(
-      `第${yaoIndex}爻 · 第${i + 1}揲`,
-      '揲之以四以象四时',
-      `左余 ${s.l_rem} 策 · 右余 ${s.r_rem} 策`
-    );
-    await waitForStep();
-    await sleep(delay * 0.3);
-
-    // ── 归奇 ──
-    const leftStems = [], rightStems2 = [];
-    allStems.forEach((el, idx) => {
-      if (el.classList.contains('group-hang')) return;
-      if (leftIndices.has(idx)) leftStems.push(el); else rightStems2.push(el);
-    });
-    for (let j = 0; j < s.l_rem && j < leftStems.length; j++) {
-      leftStems[leftStems.length - 1 - j].classList.remove('group-a');
-      leftStems[leftStems.length - 1 - j].classList.add('group-remain');
-    }
-    for (let j = 0; j < s.r_rem && j < rightStems2.length; j++) {
-      rightStems2[rightStems2.length - 1 - j].classList.remove('group-b');
-      rightStems2[rightStems2.length - 1 - j].classList.add('group-remain');
-    }
-    setStepInfo(
-      `第${yaoIndex}爻 · 第${i + 1}揲`,
-      '归奇于扐以象闰',
-      `归奇 ${s.removed} 策 · 剩余 ${s.remaining} 策`
-    );
-    // 归奇显示：左余 + 右余 + 挂一
-    showGroups({l_remain: s.l_rem, r_remain: s.r_rem, hang: s.hang, removed: s.removed});
-    await waitForStep();
-    await sleep(delay * 0.3);
-
-    // 下一变的草梗
-    if (i < 2) {
-      renderStems(s.remaining, $('stemsContainer'));
-      await sleep(delay * 0.3);
-    }
-  }
-
-  // ── 结果 ──
-  const mapping = {
-    6: {symbol: '⚋', type: '老阴', cls: 'laoyin', changing: true},
-    7: {symbol: '⚊', type: '少阳', cls: 'shaoyang', changing: false},
-    8: {symbol: '⚋', type: '少阴', cls: 'shaoyin', changing: false},
-    9: {symbol: '☰', type: '老阳', cls: 'laoyang', changing: true}
-  };
-  const info = mapping[result] || mapping[7];
-  setStepInfo(
-    `第${yaoIndex}爻 · 结果`,
-    `${result} 策 → ${info.type}`,
-    info.changing ? '此为变爻' : '此为定爻'
-  );
-  renderStems(steps[2].remaining, $('stemsContainer'), info.changing ? 'highlight' : '');
-  await sleep(delay);
-
-  return {value: result, info};
+async function shakeShell(duration) {
+  const shell = $('turtleShell');
+  shell.classList.add('shaking');
+  await sleep(duration);
+  shell.classList.remove('shaking');
 }
 
 // ============ Main Flow ============
@@ -776,42 +802,85 @@ async function startDivination() {
   isRunning = true;
   $('btnStart').disabled = true;
   $('resultsSection').classList.remove('visible');
-  $('speedControl').style.display = 'flex';
-  $('stepControl').style.display = 'flex';
 
-  // 第一步：真随机一次性算完全部6爻
-  const lineDataList = [];
-  for (let i = 0; i < 6; i++) lineDataList.push(computeLine());
+  const question = $('questionInput').value.trim();
+  if (!question) {
+    showToast('请先输入占卜的问题');
+    $('btnStart').disabled = false;
+    isRunning = false;
+    return;
+  }
 
-  // 控制台输出完整序列
-  console.log('========== 大衍算卦序列 ==========');
-  lineDataList.forEach((line, idx) => {
-    console.log(`\n第 ${idx + 1} 爻 (结果: ${line.result} 策):`);
-    line.steps.forEach((step, sIdx) => {
-      console.log(`  第 ${sIdx + 1} 揲: 总${step.total} → 分二(左${step.left}, 右${step.right}) → 挂一(右${step.rightAfterHang}) → 揲四(左余${step.l_rem}, 右余${step.r_rem}) → 归奇${step.removed} → 剩余${step.remaining}`);
-    });
+  // 预计算六爻结果
+  const yaoResults = [];
+  for (let i = 0; i < 6; i++) {
+    yaoResults.push(tossCoins());
+  }
+
+  console.log('========== 龟壳占卜卦序 ==========');
+  yaoResults.forEach((r, idx) => {
+    console.log(`第 ${idx + 1} 爻: ${r.coins.map(c => c.isHeads ? '字' : '背').join(' ')} = ${r.total}数 → ${r.yaoType}`);
   });
   console.log('==================================');
 
-  const lines = [];
+  // 进度条
   const progressBar = $('progressBar');
   const progressLabel = $('progressLabel');
-
   progressBar.innerHTML = '';
   progressBar.classList.add('active');
+  const yaoNames = ['初','二','三','四','五','上'];
   for (let i = 0; i < 6; i++) {
     const dot = document.createElement('div');
     dot.className = 'progress-dot';
+    dot.textContent = yaoNames[i];
     progressBar.appendChild(dot);
   }
 
-  // 第二步：逐爻回放动画
+  const lines = [];
+
+  // 逐爻动画
   for (let i = 0; i < 6; i++) {
     const dots = progressBar.querySelectorAll('.progress-dot');
     dots[i].classList.add('active');
-    progressLabel.textContent = `正在求第${i + 1}爻...`;
-    const result = await animateChange(i + 1, lineDataList[i]);
-    lines.push(result);
+    progressLabel.textContent = `正在求第${yaoNames[i]}爻...`;
+
+    const result = yaoResults[i];
+    
+    // 摇龟壳
+    setCoinResult(
+      `第${yaoNames[i]}爻`,
+      '摇动龟壳...',
+      ''
+    );
+    await shakeShell(800);
+
+    // 铜钱翻转
+    const coinEls = [$('coin1'), $('coin2'), $('coin3')];
+    for (let j = 0; j < 3; j++) {
+      await flipCoin(coinEls[j], result.coins[j].isHeads);
+      await sleep(100);
+    }
+
+    // 显示结果
+    const coinDescs = result.coins.map(c => c.isHeads ? '字' : '背').join(' · ');
+    setCoinResult(
+      `第${yaoNames[i]}爻 · 结果`,
+      `${coinDescs}`,
+      `${result.total}数 → ${result.yaoType}${result.isChanging ? '（变爻）' : ''}`
+    );
+
+    lines.push({
+      value: result.yaoValue,
+      info: {
+        type: result.yaoType,
+        changing: result.isChanging,
+        cls: result.yaoType === '老阴' ? 'laoyin' : 
+             result.yaoType === '老阳' ? 'laoyang' :
+             result.yaoType === '少阴' ? 'shaoyin' : 'shaoyang'
+      }
+    });
+
+    await sleep(800);
     dots[i].classList.remove('active');
     dots[i].classList.add('done');
   }
@@ -820,35 +889,31 @@ async function startDivination() {
   progressBar.classList.remove('active');
 
   const binary = lines.map(l => (l.value === 7 || l.value === 9) ? '1' : '0').join('');
-  showResults(lines, binary);
-  saveHistory(lines, binary);
+  showResults(lines, binary, question);
+  saveHistory(lines, binary, question);
 
   isRunning = false;
   $('btnStart').disabled = false;
-  $('stepControl').style.display = 'none';
 }
 
-function showResults(lines, binary) {
+function showResults(lines, binary, question) {
   const hex = HEXAGRAMS[binary] || {name:'未知', full:'未知卦', desc:'数据缺失', detail:'未找到对应卦象信息。'};
   const display = $('hexDisplay');
 
-  // Determine changed hexagram
   const changedBinary = lines.map(l => {
-    if (l.value === 6) return '1'; // old yin -> yang
-    if (l.value === 9) return '0'; // old yang -> yin
+    if (l.value === 6) return '1';
+    if (l.value === 9) return '0';
     return (l.value === 7) ? '1' : '0';
   }).join('');
   const changedHex = HEXAGRAMS[changedBinary];
 
-  // Determine mutual hexagram (2-3-4 as lower, 3-4-5 as upper)
-  const mutualLower = binary.substring(1, 4);  // 二三四爻 → 互卦下卦(内卦)
-  const mutualUpper = binary.substring(2, 5);  // 三四五爻 → 互卦上卦(外卦)
+  const mutualLower = binary.substring(1, 4);
+  const mutualUpper = binary.substring(2, 5);
   const mutualBinary = mutualLower + mutualUpper;
   const mutualHex = HEXAGRAMS[mutualBinary];
 
   const changingLines = lines.map((l, i) => l.info.changing ? (i + 1) : 0).filter(v => v > 0);
 
-  // Build yao lines display
   let yaoLinesHTML = '<div class="yao-lines">';
   for (let i = 5; i >= 0; i--) {
     const l = lines[i];
@@ -866,9 +931,13 @@ function showResults(lines, binary) {
   }
   yaoLinesHTML += '</div>';
 
-  // Build interpretation
   let interpHTML = `<div class="interp-title">${hex.full}</div>`;
   interpHTML += `<div class="interp-body">`;
+  if (question) {
+    interpHTML += `<p class="section-title">所问之事</p>`;
+    interpHTML += `<p>${question}</p>`;
+  }
+  interpHTML += `<p class="section-title">卦辞</p>`;
   interpHTML += `<p>${hex.desc}</p>`;
   interpHTML += `<p class="section-title">释义</p>`;
   interpHTML += `<p>${hex.detail}</p>`;
@@ -882,7 +951,6 @@ function showResults(lines, binary) {
   }
   interpHTML += `</div>`;
 
-  // Changed hexagram
   if (changedHex && changingLines.length > 0) {
     interpHTML += `
       <div class="changed-hex">
@@ -892,7 +960,6 @@ function showResults(lines, binary) {
       </div>`;
   }
 
-  // Mutual hexagram
   if (mutualHex) {
     interpHTML += `
       <div class="mutual-hex">
@@ -902,9 +969,8 @@ function showResults(lines, binary) {
       </div>`;
   }
 
-  // Yao texts
   interpHTML += `<div class="yao-text-section"><div class="interp-title">六爻详析</div>`;
-  const yaoTexts = getYaoTexts(hex.name);
+  const yaoTexts = YAO_TEXTS[hex.name] || ['','','','','',''];
   for (let i = 0; i < 6; i++) {
     const l = lines[i];
     const pos = ['初','二','三','四','五','上'][i];
@@ -925,18 +991,15 @@ function showResults(lines, binary) {
 
   $('interpSection').innerHTML = interpHTML;
 
-  // Trigger animations
   setTimeout(() => {
     $('resultsSection').classList.add('visible');
     document.querySelectorAll('.yao-line').forEach(el => el.classList.add('visible'));
   }, 100);
 
-  // Scroll to results
   setTimeout(() => {
     $('resultsSection').scrollIntoView({behavior: 'smooth', block: 'start'});
   }, 600);
 
-  // Show share button
   $('shareBtnWrap').innerHTML = `
     <button class="share-btn" onclick="shareAsImage()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -946,89 +1009,19 @@ function showResults(lines, binary) {
     </button>`;
 }
 
-function getYaoTexts(hexName) {
-  const texts = {
-    '乾': ['潜龙勿用','见龙在田，利见大人','君子终日乾乾，夕惕若厉，无咎','或跃在渊，无咎','飞龙在天，利见大人','亢龙有悔'],
-    '坤': ['履霜，坚冰至','直方大，不习无不利','含章可贞，或从王事，无成有终','括囊，无咎无誉','黄裳，元吉','龙战于野，其血玄黄'],
-    '屯': ['磐桓，利居贞','屯如邅如，乘马班如','即鹿无虞，惟入于林中','乘马班如，求婚媾','屯其膏，小贞吉，大贞凶','乘马班如，泣血涟如'],
-    '蒙': ['发蒙，利用刑人','包蒙吉，纳妇吉','勿用取女，见金夫','困蒙，吝','童蒙，吉','击蒙，不利为寇，利御寇'],
-    '需': ['需于郊，利用恒','需于沙，小有言','需于泥，致寇至','需于血，出自穴','需于酒食，贞吉','入于穴，有不速之客三人来'],
-    '讼': ['不永所事，小有言','不克讼，归而逋','食旧德，贞厉','不克讼，复即命','讼，元吉','或锡之鞶带，终朝三褫之'],
-    '师': ['师出以律，否臧凶','在师中，吉','师或舆尸，凶','师左次，无咎','田有禽，利执言','大君有命，开国承家'],
-    '比': ['有孚比之，无咎','比之自内，贞吉','比之匪人','外比之，贞吉','显比，王用三驱','比之无首，凶'],
-    '小畜': ['复自道，何其咎','牵复，吉','舆说辐，夫妻反目','有孚，血去惕出','有孚挛如，富以其邻','既雨既处，尚德载'],
-    '履': ['素履往，无咎','履道坦坦，幽人贞吉','眇能视，跛能履','履虎尾，愬愬终吉','夬履，贞厉','视履考祥，其旋元吉'],
-    '泰': ['拔茅茹，以其汇','包荒，用冯河','无平不陂，无往不复','翩翩不富以其邻','帝乙归妹，以祉元吉','城复于隍，勿用师'],
-    '否': ['拔茅茹，以其汇','包承，小人吉','包羞','有命无咎','休否，大人吉','倾否，先否后喜'],
-    '同人': ['同人于门，无咎','同人于宗，吝','伏戎于莽','乘其墉，弗克攻','同人先号咷而后笑','同人于郊，无悔'],
-    '大有': ['无交害，匪咎','大车以载，有攸往','公用亨于天子','匪其彭，无咎','厥孚交如，威如','自天佑之，吉无不利'],
-    '谦': ['谦谦君子，用涉大川','鸣谦，贞吉','劳谦，君子有终','无不利，撝谦','不富以其邻','鸣谦，利用行师'],
-    '豫': ['鸣豫，凶','介于石，不终日','盱豫，悔','由豫，大有得','贞疾，恒不死','冥豫，成有渝'],
-    '随': ['官有渝，贞吉','系小子，失丈夫','系丈夫，失小子','随有获，贞凶','孚于嘉，吉','拘系之，乃从维之'],
-    '蛊': ['干父之蛊，有子考','干母之蛊，不可贞','干父之蛊，小有悔','裕父之蛊，往见吝','干父之蛊，用誉','不事王侯，高尚其事'],
-    '临': ['咸临，贞吉','咸临，吉无不利','甘临，无攸利','至临，无咎','知临，大君之宜','敦临，吉无咎'],
-    '观': ['童观，小人无咎','窥观，利女贞','观我生进退','观国之光，利用宾于王','观我生，君子无咎','观其生，君子无咎'],
-    '噬嗑': ['屦校灭趾，无咎','噬肤灭鼻，无咎','噬腊肉，遇毒','噬干胏，得金矢','噬干肉，得黄金','何校灭耳，凶'],
-    '贲': ['贲其趾，舍车而徒','贲其须','贲如濡如','贲如皤如','贲于丘园，束帛戋戋','白贲，无咎'],
-    '剥': ['剥床以足，蔑贞凶','剥床以辨，蔑贞凶','剥之，无咎','剥床以肤，凶','贯鱼以宫人宠','硕果不食，君子得舆'],
-    '复': ['不远复，无祗悔','休复，吉','频复，厉无咎','中行独复','敦复，无悔','迷复，凶'],
-    '无妄': ['无妄往，吉','不耕获，不菑畬','无妄之灾','可贞，无咎','无妄之疾，勿药有喜','无妄行有眚'],
-    '大畜': ['有厉利己','舆说輹','良马逐','童牛之牿','豶豕之牙','何天之衢，亨'],
-    '颐': ['舍尔灵龟，观我朵颐','颠颐，拂经','拂颐，贞凶','颠颐，吉','拂经，居贞吉','由颐，厉吉'],
-    '大过': ['藉用白茅，无咎','枯杨生稊，老夫得其女妻','栋桡，凶','栋隆，吉','枯杨生华，老妇得其士夫','过涉灭顶，凶'],
-    '坎': ['习坎，入于坎窞，凶','坎有险，求小得','来之坎坎，险且枕','樽酒簋贰','坎不盈，祗既平','系用徽纆，凶'],
-    '离': ['履错然，敬之无咎','黄离，元吉','日昃之离，不鼓缶而歌','突如其来如，焚如','出涕沱若，戚嗟若','王用出征，有嘉折首'],
-    '咸': ['咸其拇','咸其腓','咸其股','贞吉悔亡','咸其脢','咸其辅颊舌'],
-    '恒': ['浚恒，贞凶','悔亡','不恒其德','田无禽','恒其德贞','振恒，凶'],
-    '遁': ['遁尾，厉','执之用黄牛之革','系遁，有疾厉','好遁，君子吉','嘉遁，贞吉','肥遁，无不利'],
-    '大壮': ['壮于趾，征凶','贞吉','小人用壮，君子用罔','藩决不羸','丧羊于易','羝羊触藩，不能退'],
-    '晋': ['晋如摧如，贞吉','晋如愁如','众允，悔亡','晋如鼫鼠，贞厉','悔亡，失得勿恤','晋其角，维用伐邑'],
-    '明夷': ['明夷于飞，垂其翼','明夷，夷于左股','明夷于南狩','入于左腹，获明夷之心','箕子之明夷','不明晦，初登于天'],
-    '家人': ['闲有家，悔亡','无攸遂，在中馈','家人嗃嗃，悔厉吉','富家，大吉','王假有家，勿恤','有孚威如，终吉'],
-    '睽': ['悔亡','遇主于巷，无咎','见舆曳','睽孤遇元夫','悔亡，厥宗噬肤','见豕负涂，载鬼一车'],
-    '蹇': ['往蹇来誉','王臣蹇蹇','往蹇来反','往蹇来连','大蹇朋来','往蹇来硕，吉'],
-    '解': ['无咎','田获三狐，得黄矢','负且乘，致寇至','解而拇，朋至斯孚','君子维有解','公用射隼于高墉之上'],
-    '损': ['酌损之','利贞','三人行则损一人','损其疾，使遄有喜','或益之十朋之龟','弗损益之，无咎'],
-    '益': ['利用为大作','或益之十朋之龟','益之用凶事','中行告公从','有孚惠心，勿问元吉','莫益之，或击之'],
-    '夬': ['壮于前趾','惕号，莫夜有戎','壮于頄，有凶','臀无肤，其行次且','苋陆夬夬','无号，终有凶'],
-    '姤': ['系于金柅','包有鱼，无咎','臀无肤，其行次且','包无鱼，起凶','以杞包瓜，含章','姤其角，吝'],
-    '萃': ['有孚不终','引吉，无咎','萃如嗟如','大吉，无咎','萃有位，无咎','赍咨涕洟，无咎'],
-    '升': ['允升，大吉','孚乃利用禴','升虚邑','王用亨于岐山','贞吉，升阶','冥升，利于不息之贞'],
-    '困': ['臀困于株木','困于酒食','困于石','来徐徐','劓刖，困于赤绂','困于葛藟，曰动悔有悔'],
-    '井': ['井泥不食','井谷射鲋','井渫不食','井甃，无咎','井冽寒泉食','井收勿幕，有孚元吉'],
-    '革': ['巩用黄牛之革','己日乃革之','征凶，贞厉','悔亡，有孚改命','大人虎变','君子豹变'],
-    '鼎': ['鼎颠趾，利出否','鼎有实，我仇有疾','鼎耳革，其行塞','鼎折足，覆公餗','鼎黄耳金铉','鼎玉铉，大吉'],
-    '震': ['震来虩虩，后笑言哑哑','震来厉，亿丧贝','震苏苏','震遂泥','震往来厉','震索索，视矍矍'],
-    '艮': ['艮其趾，无咎','艮其腓，不拯其随','艮其限，列其夤','艮其身，无咎','艮其辅，言有序','敦艮，吉'],
-    '渐': ['鸿渐于干','鸿渐于磐','鸿渐于陆','鸿渐于木','鸿渐于陵','鸿渐于陆，其羽可用为仪'],
-    '归妹': ['归妹以娣','眇能视，利幽人之贞','归妹以须','归妹愆期','帝乙归妹','女承筐无实'],
-    '丰': ['遇其配主，虽旬无咎','丰其蔀，日中见斗','丰其沛，日中见沫','丰其蔀，日中见斗','来章，有庆誉','丰其屋，蔀其家'],
-    '旅': ['旅琐琐，斯其所取灾','旅即次，怀其资','旅焚其次','旅于处，得其资斧','射雉，一矢亡','鸟焚其巢，旅人先笑后号咷'],
-    '巽': ['进退，利武人之贞','巽在床下，用史巫纷若','频巽，吝','悔亡，田获三品','贞吉悔亡','巽在床下，丧其资斧'],
-    '兑': ['和兑，吉','孚兑，吉','来兑，凶','商兑未宁','孚于剥，有厉','引兑'],
-    '涣': ['用拯马壮，吉','涣奔其机','涣其躬','涣其群','涣汗其大号','涣其血，去逖出'],
-    '节': ['不出户庭，无咎','不出门庭，凶','不节若，则嗟若','安节，亨','甘节，吉','苦节，贞凶'],
-    '中孚': ['虞吉','鸣鹤在阴','得敌，或鼓或罢','月几望','有孚挛如','翰音登于天，贞凶'],
-    '小过': ['飞鸟以凶','过其祖，遇其妣','弗过防之','无咎，弗过遇之','密云不雨','弗遇过之，飞鸟离之'],
-    '既济': ['曳其轮，濡其尾','妇丧其茀，勿逐','高宗伐鬼方','繻有衣袽','东邻杀牛，不如西邻之禴','濡其首，厉'],
-    '未济': ['濡其尾，吝','曳其轮，贞吉','未济征凶','贞吉悔亡','贞吉无悔','饮酒濡首，有孚失是']
-  };
-  if (!texts[hexName]) throw new Error(`未知卦名: ${hexName}`);
-  return texts[hexName];
-}
-
-function saveHistory(lines, binary) {
+function saveHistory(lines, binary, question) {
   const hex = HEXAGRAMS[binary];
   if (!hex) return;
   const record = {
     name: hex.full,
+    question: question || '',
     lines: lines.map(l => l.value),
     binary,
     time: new Date().toLocaleString('zh-CN')
   };
   history.unshift(record);
   if (history.length > 20) history.pop();
-  localStorage.setItem('divination_history', JSON.stringify(history));
+  localStorage.setItem('turtle_history', JSON.stringify(history));
   renderHistory();
 }
 
@@ -1041,7 +1034,7 @@ function renderHistory() {
   let html = '';
   history.forEach((h, i) => {
     html += `<div class="history-item" onclick="loadHistory(${i})">
-      <div class="hi-name">${h.name}</div>
+      <div class="hi-name">${h.name}${h.question ? ' - ' + h.question : ''}</div>
       <div class="hi-time">${h.time}</div>
     </div>`;
   });
@@ -1053,15 +1046,15 @@ function loadHistory(idx) {
   if (!h) return;
   const lines = h.lines.map(v => {
     const mapping = {
-      6: {symbol: '⚋', type: '老阴', cls: 'laoyin', changing: true},
-      7: {symbol: '⚊', type: '少阳', cls: 'shaoyang', changing: false},
-      8: {symbol: '⚋', type: '少阴', cls: 'shaoyin', changing: false},
-      9: {symbol: '☰', type: '老阳', cls: 'laoyang', changing: true}
+      6: {type: '老阴', cls: 'laoyin', changing: true},
+      7: {type: '少阳', cls: 'shaoyang', changing: false},
+      8: {type: '少阴', cls: 'shaoyin', changing: false},
+      9: {type: '老阳', cls: 'laoyang', changing: true}
     };
     return {value: v, info: mapping[v]};
   });
   $('resultsSection').classList.remove('visible');
-  setTimeout(() => showResults(lines, h.binary), 100);
+  setTimeout(() => showResults(lines, h.binary, h.question), 100);
 }
 
 function toggleHistory() {
@@ -1084,11 +1077,11 @@ async function shareAsImage() {
     const hexName = hexEl.querySelector('.hexagram-title')?.textContent || '卦象';
     const now = new Date();
     const timeStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    const fileName = `大衍算卦_${hexName}_${timeStr.replace(/[\s:]/g, '')}.png`;
+    const fileName = `龟壳占卜_${hexName}_${timeStr.replace(/[\s:]/g, '')}.png`;
 
     headerDiv = document.createElement('div');
     headerDiv.className = 'share-header';
-    headerDiv.innerHTML = `<h2>大衍算卦</h2><p>${timeStr}</p>`;
+    headerDiv.innerHTML = `<h2>龟壳占卜</h2><p>${timeStr}</p>`;
     $('resultsSection').prepend(headerDiv);
     $('resultsSection').classList.add('share-capture');
     $('shareBtnWrap').style.display = 'none';
@@ -1104,13 +1097,11 @@ async function shareAsImage() {
       windowWidth: 600
     });
 
-    // Restore UI immediately after capture
     $('resultsSection').removeChild(headerDiv);
     headerDiv = null;
     $('resultsSection').classList.remove('share-capture');
     $('shareBtnWrap').style.display = '';
 
-    // Try native share API first (mobile friendly)
     if (navigator.share && canvas.toBlob) {
       try {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
@@ -1120,12 +1111,9 @@ async function shareAsImage() {
           showToast('分享成功');
           return;
         }
-      } catch (shareErr) {
-        // User cancelled or not supported, fall through
-      }
+      } catch (shareErr) {}
     }
 
-    // Try blob download
     let downloaded = false;
     if (canvas.toBlob && URL.createObjectURL) {
       try {
@@ -1139,12 +1127,9 @@ async function shareAsImage() {
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
         downloaded = true;
-      } catch (e) {
-        // fall through
-      }
+      } catch (e) {}
     }
 
-    // Fallback: dataURL
     if (!downloaded) {
       try {
         const dataUrl = canvas.toDataURL('image/png');
@@ -1155,15 +1140,12 @@ async function shareAsImage() {
         link.click();
         document.body.removeChild(link);
         downloaded = true;
-      } catch (e) {
-        // fall through
-      }
+      } catch (e) {}
     }
 
     if (downloaded) {
       showToast('卦象图片已保存');
     } else {
-      // Last resort: show image in modal for manual save
       showImageModal(canvas, fileName);
       showToast('请长按/右键图片保存');
     }
@@ -1201,11 +1183,6 @@ function showImageModal(canvas, fileName) {
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   document.body.appendChild(modal);
 }
-
-// Speed slider
-$('speedSlider').addEventListener('input', e => {
-  animSpeed = parseInt(e.target.value);
-});
 
 // Init
 renderHistory();
