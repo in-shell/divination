@@ -355,23 +355,40 @@ header .divider{
   animation:fadeIn 0.3s ease;
 }
 .image-modal-content{
-  background:var(--bg2);border:1px solid var(--border);border-radius:6px;
-  max-width:100%;max-height:90vh;display:flex;flex-direction:column;
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  max-width:100%;max-height:92vh;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);overflow:hidden;
 }
 .image-modal-header{
   display:flex;justify-content:space-between;align-items:center;
   padding:12px 16px;border-bottom:1px solid var(--border);
-  color:var(--gold);font-size:0.9rem;letter-spacing:0.1em;
+  color:var(--gold);font-size:0.9rem;letter-spacing:0.05em;flex-shrink:0;
 }
 .image-modal-close{
   background:none;border:none;color:var(--text-dim);font-size:1.5rem;
   cursor:pointer;line-height:1;padding:0 4px;
 }
 .image-modal-close:hover{color:var(--gold)}
-.image-modal-img{
-  max-width:100%;max-height:calc(90vh - 50px);display:block;
+.image-modal-body{
+  padding:16px;overflow:auto;display:flex;justify-content:center;flex:1;
 }
+.image-modal-img{
+  max-width:100%;max-height:60vh;display:block;border-radius:4px;
+}
+.image-modal-footer{
+  padding:12px 16px;border-top:1px solid var(--border);text-align:center;flex-shrink:0;
+}
+.image-modal-download{
+  padding:10px 32px;border:1px solid var(--gold);
+  background:linear-gradient(135deg,rgba(201,169,110,0.15),rgba(201,169,110,0.03));
+  color:var(--gold);font-family:'Noto Serif SC',serif;font-size:0.95rem;
+  letter-spacing:0.15em;cursor:pointer;border-radius:4px;
+  transition:all 0.3s ease;
+}
+.image-modal-download:hover:not(:disabled){
+  background:rgba(201,169,110,0.2);transform:translateY(-1px);
+}
+.image-modal-download:disabled{opacity:0.5;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -1055,8 +1072,8 @@ async function shareAsImage() {
   btn.classList.add('loading');
   btn.textContent = '生成中...';
 
-  let canvas;
   let headerDiv;
+  let needRestore = true;
 
   try {
     const hexEl = $('hexDisplay');
@@ -1075,7 +1092,7 @@ async function shareAsImage() {
     $('resultsSection').scrollIntoView({behavior: 'instant', block: 'start'});
     await new Promise(r => setTimeout(r, 400));
 
-    canvas = await html2canvas($('resultsSection'), {
+    const canvas = await html2canvas($('resultsSection'), {
       backgroundColor: '#0d0b09',
       scale: 2,
       useCORS: true,
@@ -1086,74 +1103,22 @@ async function shareAsImage() {
     // Restore UI immediately after capture
     $('resultsSection').removeChild(headerDiv);
     headerDiv = null;
+    needRestore = false;
     $('resultsSection').classList.remove('share-capture');
     $('shareBtnWrap').style.display = '';
 
-    // Try native share API first (mobile friendly)
-    if (navigator.share && canvas.toBlob) {
-      try {
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        const file = new File([blob], fileName, { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: fileName });
-          showToast('分享成功');
-          return;
-        }
-      } catch (shareErr) {
-        // User cancelled or not supported, fall through
-      }
-    }
-
-    // Try blob download
-    let downloaded = false;
-    if (canvas.toBlob && URL.createObjectURL) {
-      try {
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-        downloaded = true;
-      } catch (e) {
-        // fall through
-      }
-    }
-
-    // Fallback: dataURL
-    if (!downloaded) {
-      try {
-        const dataUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        downloaded = true;
-      } catch (e) {
-        // fall through
-      }
-    }
-
-    if (downloaded) {
-      showToast('卦象图片已保存');
-    } else {
-      // Last resort: show image in modal for manual save
-      showImageModal(canvas, fileName);
-      showToast('请长按/右键图片保存');
-    }
+    // Always show modal with image + download button (most reliable)
+    showImageModal(canvas, fileName);
   } catch (e) {
     console.error('Share failed:', e);
     showToast('生成失败，请重试');
-    if (headerDiv && headerDiv.parentNode) {
-      $('resultsSection').removeChild(headerDiv);
+    if (needRestore) {
+      if (headerDiv && headerDiv.parentNode) {
+        $('resultsSection').removeChild(headerDiv);
+      }
+      $('resultsSection').classList.remove('share-capture');
+      $('shareBtnWrap').style.display = '';
     }
-    $('resultsSection').classList.remove('share-capture');
-    $('shareBtnWrap').style.display = '';
   } finally {
     btn.classList.remove('loading');
     btn.innerHTML = `
@@ -1165,19 +1130,66 @@ async function shareAsImage() {
 }
 
 function showImageModal(canvas, fileName) {
+  const dataUrl = canvas.toDataURL('image/png');
   const modal = document.createElement('div');
   modal.className = 'image-modal';
   modal.innerHTML = `
     <div class="image-modal-content">
       <div class="image-modal-header">
-        <span>长按/右键图片保存</span>
+        <span>长按/右键图片可保存到相册</span>
         <button class="image-modal-close">×</button>
       </div>
-      <img class="image-modal-img" alt="${fileName}">
+      <div class="image-modal-body">
+        <img class="image-modal-img" src="${dataUrl}" alt="${fileName}" />
+      </div>
+      <div class="image-modal-footer">
+        <button class="image-modal-download">下载图片</button>
+      </div>
     </div>`;
-  modal.querySelector('.image-modal-img').src = canvas.toDataURL('image/png');
-  modal.querySelector('.image-modal-close').onclick = () => modal.remove();
-  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+  const close = () => modal.remove();
+  modal.querySelector('.image-modal-close').onclick = close;
+  modal.onclick = (e) => { if (e.target === modal) close(); };
+
+  // Download button: try blob first, then dataURL
+  modal.querySelector('.image-modal-download').onclick = async () => {
+    const dBtn = modal.querySelector('.image-modal-download');
+    const originalText = dBtn.textContent;
+    dBtn.disabled = true;
+    dBtn.textContent = '下载中...';
+
+    let ok = false;
+    // Try blob
+    if (canvas.toBlob && URL.createObjectURL) {
+      try {
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        ok = true;
+      } catch (e) {}
+    }
+    // Fallback dataURL
+    if (!ok) {
+      try {
+        const a = document.createElement('a');
+        a.href = dataUrl; a.download = fileName;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        ok = true;
+      } catch (e) {}
+    }
+
+    if (ok) {
+      dBtn.textContent = '已开始下载';
+      setTimeout(() => { dBtn.textContent = originalText; dBtn.disabled = false; }, 1500);
+    } else {
+      dBtn.textContent = '请右键图片保存';
+      dBtn.disabled = false;
+    }
+  };
+
   document.body.appendChild(modal);
 }
 
